@@ -32,6 +32,8 @@ ENV OPENSSL_DIR=/usr/local/musl/armv7-unknown-linux-musleabihf
 ENV OPENSSL_STATIC=1
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV PKG_CONFIG_ALL_STATIC=1
+ENV RUSTFLAGS="-C link-arg=-latomic"
+ENV CMAKE_EXE_LINKER_FLAGS="-latomic"
 
 WORKDIR /workspace
 
