@@ -46,6 +46,35 @@ case "$RUST_TARGET" in
 esac
 
 echo "Building picoquic for $RUST_TARGET..."
+cat > scripts/build_picoquic.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PICOQUIC_DIR="${PICOQUIC_DIR:-"${ROOT_DIR}/vendor/picoquic"}"
+BUILD_DIR="${PICOQUIC_BUILD_DIR:-"${ROOT_DIR}/.picoquic-build"}"
+BUILD_TYPE="${BUILD_TYPE:-Release}"
+FETCH_PTLS="${PICOQUIC_FETCH_PTLS:-ON}"
+
+if [[ ! -d "${PICOQUIC_DIR}" ]]; then
+echo "picoquic not found at ${PICOQUIC_DIR}. Run: git submodule update --init --recursive" >&2
+exit 1
+fi
+
+CMAKE_ARGS=(
+"-DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
+"-DPICOQUIC_FETCH_PTLS=${FETCH_PTLS}"
+"-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
+"-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+"-DCMAKE_EXE_LINKER_FLAGS=-latomic"
+"-DCMAKE_SHARED_LINKER_FLAGS=-latomic"
+)
+
+cmake -S "${PICOQUIC_DIR}" -B "${BUILD_DIR}" "${CMAKE_ARGS[@]}"
+cmake --build "${BUILD_DIR}"
+EOF
+
+chmod +x scripts/build_picoquic.sh
 bash scripts/build_picoquic.sh
 
 export PICOQUIC_DIR=/workspace/slipstream-rust/vendor/picoquic
